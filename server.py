@@ -1,13 +1,13 @@
 from socket import *
 import threading
 import time
-server_port = 12000
+server_port = 8828
 
 lock = threading.Lock()
 
 def handle_client(connection, client_number):
     global counter, data
-    while counter<100:
+    while counter<1000:
         sentence = connection.recv(1024).decode()
         # print("sentence = ", sentence)
         x = parse(sentence)
@@ -22,7 +22,7 @@ def handle_client(connection, client_number):
 
 
 serverSocket = socket(AF_INET,SOCK_STREAM)
-serverSocket.bind(('',server_port))
+serverSocket.bind(('0.0.0.0',server_port))
 serverSocket.listen(3)
 print('Server is ready to receive')
 
@@ -49,6 +49,7 @@ st = time.time()
 
 while True:
     connection, addr = serverSocket.accept()
+    # print(addr)
     client_thread = threading.Thread(target=handle_client, args=(connection, client_number))
     client_thread.start()
     client_number += 1
