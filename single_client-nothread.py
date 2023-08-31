@@ -1,16 +1,21 @@
 import socket
 
 
+def parse_line(line_str):
+    """Converts the line string to (line number, line) pair"""
+    line_list = line_str.split("\n")
+    return int(line_list[0]), "\n".join(line_list[1:])
+
+
 def validate_line(line):
-    """Runs basic checks on the string received from the server"""
+    """Runs basic checks on the string received from the server, and returns parsed line"""
 
     # For incomplete packets, checking if it ends with \n
     # Line should also start with an integer.
     if len(line) < 2:
         return -2, None
     if (line[:2] == "-1" or line[0].isnumeric()) and line[-1] == "\n":
-        line_list = line.split("\n")
-        return int(line_list[0]), "\n".join(line_list[1:])
+        return parse_line(line)
     return -2, None
 
 
@@ -30,6 +35,30 @@ def send_request(client_socket, request):
     return response
 
 
+def receive_full_line(client_socket):
+    buffer_size = 1024
+    received_data = b""
+
+    while True:
+        chunk = client_socket.recv(buffer_size)
+        if not chunk:
+            break
+        received_data += chunk
+        if b"\n" in received_data:
+            break
+    # I've removed the .strip() at the end to keep the final '\n'
+    # so that we can verify later with validate_line() that this function gets the complete line
+    return received_data.decode("utf-8")
+
+
+def request_line(client_socket):
+    # Returns [line number, line]
+    request = "SENDLINE\n"
+    client_socket.send(request.encode("utf-8"))
+    line = receive_full_line(client_socket)
+    return line
+
+
 def connect_to_server(server_ip, server_port):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((server_ip, server_port))
@@ -45,8 +74,9 @@ def collect_lines(client_socket):
     # try:
     # wait_tries = 0
     while True:
-        result = validate_line(send_request(client_socket, "SENDLINE\n"))
-
+        # result = validate_line(send_request(client_socket, "SENDLINE\n"))
+        response = request_line(client_socket)
+        result = validate_line(response)
         # Doing checks
         if result[0] == -2 or result[0] == -1 or data[result[0]]:
             continue
