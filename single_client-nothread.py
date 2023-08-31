@@ -20,8 +20,12 @@ def validate_line(line):
 
 
 def assemble_lines(data, entry, name):
-    """Assembles the complete data in the format for submission to server"""
-    pass
+    """Assembles the data in the format for submission to server"""
+    submission = f"SUBMIT\n{entry}@{name}\n"
+    for i in range(len(data)):
+        if data[i] != None:
+            submission += f"{i}\n{data[i]}"
+    return submission
 
 
 def record_time(func, args):
@@ -30,6 +34,7 @@ def record_time(func, args):
 
 
 def send_request(client_socket, request):
+    """WITHOUT USING receive_full_line()"""
     client_socket.send(request.encode("utf-8"))
     response = client_socket.recv(1000_000).decode("utf-8")
     return response
@@ -80,6 +85,7 @@ def collect_lines(client_socket):
         # result = validate_line(send_request(client_socket, "SENDLINE\n"))
         response = request_line(client_socket)
         result = validate_line(response)
+
         # Doing checks
         if result[0] == -2 or result[0] == -1 or data[result[0]]:
             continue
@@ -110,7 +116,10 @@ r = send_request(socket, "SESSION RESET\n")
 print(r)
 
 if r == "Ok\n":
-    d = collect_lines(socket)
+    full_text = collect_lines(socket)
+    submission = assemble_lines(full_text)
+    submission_response = send_request(socket, submission)
+    print(submission_response)
 
 socket.close()
 print("Connection closed.")
