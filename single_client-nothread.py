@@ -44,7 +44,10 @@ def receive_full_line(client_socket):
         if not chunk:
             break
         received_data += chunk
-        if b"\n" in received_data:
+        # if b"\n" in received_data:
+        # Below is a more accurate stopping criteria,
+        # because there are ideally atleast 2 "\n"s in the recieved line.
+        if received_data[-1:] == b"\n":
             break
     # I've removed the .strip() at the end to keep the final '\n'
     # so that we can verify later with validate_line() that this function gets the complete line
