@@ -33,6 +33,8 @@ client_number = 1
 
 def parse(s):
     l = s.split()
+    if (l == []):
+        return None
     try:
         x = int(l[0])
         if (x == -1):
@@ -49,7 +51,7 @@ st = time.time()
 
 while True:
     connection, addr = serverSocket.accept()
-    # print(addr)
+    print(addr)
     client_thread = threading.Thread(target=handle_client, args=(connection, client_number))
     client_thread.start()
     client_number += 1
