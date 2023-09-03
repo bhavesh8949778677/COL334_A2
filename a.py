@@ -82,6 +82,7 @@ def broadcast(result):
     print(connection_list)
     message = str(result[0])+'\n'+result[1]
     for connection in connection_list:
+        print(f"Broadcasting line {result[0]}")
         connection.send(message.encode())
     return
 
@@ -97,7 +98,6 @@ def collect_lines(client_socket, line_count_limit=1000):
         # result = validate_line(send_request(client_socket, "SENDLINE\n"))
         response = request_line(client_socket)
         result = parse_line(response)
-
         # Doing checks
         if result[0] == -2:
             broken_lines.append(result)
@@ -163,7 +163,25 @@ def connect_client_as_client(server_ip,server_port):
     global s 
     s = socket(AF_INET,SOCK_STREAM)
     s.connect((server_ip,server_port)) # my IP address
+    while True:
+        response = receive_full_line(s)
+        result = parse_line(response)
+        print(result)
+        # Doing checks
+        if result[0] == -2:
+            broken_lines.append(result)
+        if result[0] == -2 or result[0] == -1 or data[result[0]]:
+            continue
 
+        data[result[0]] = result[1]
+        broadcast(result)
+        line_count += 1
+        print(f"lines received: {line_count}\n no.:{result[0]}")
+
+        if line_count == 1000:
+            break
+    print("all lines received\n\n")
+    return data
 
 
 
@@ -176,7 +194,8 @@ thread.start()
 socketp = 0
 
 socketp = connect_to_server(server_ip, server_port)
-# connect_client_as_client('10.184.55.77',8828)
+t2 = threading.Thread(target =connect_client_as_client,args =('10.194.12.217',8828))
+t2.start()
 print("Connected to the server.\n")
 
 r = send_request(socketp, "SESSION RESET\n")
