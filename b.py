@@ -180,6 +180,8 @@ def connect_client_server(cs_ip, cs_port):
     connection_list.append(s)
     print(connection_list)
     while True:
+        if stop_event.is_set():
+            break
         response = receive_full_line(s)
         print("Hi")
         result = parse_line(response)
@@ -211,11 +213,14 @@ def act_server():
     print('Server is ready to receive')
 
     while True:
+        if stop_event.is_set():
+            break
         connection, addr = serverSocket.accept()
         print(f"Succesful Connection with a client with addr = {addr}")
         print(connection)
         client_thread = threading.Thread(target=handle_client, args=(connection, client_number))
         client_thread.start()
+        client_thread.join()
         client_number += 1
         # connection_list.append(connection)
 
@@ -254,14 +259,18 @@ def parse_input(s):
 
 def main():
     print("Program Starts")
+    threads = []
     while True:
         s = input("Input : ")
         if (s.lower() == 'exit'):
             print("Exitting the Program")
             stop_event.set() # Turn off all threads
+            for thread in threads:
+                    thread.join()
             sys.exit(0)
         t = threading.Thread(target = parse_input, args =(s,))
         t.start()
+        threads.append(t)
 
 
 
