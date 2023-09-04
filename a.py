@@ -122,6 +122,9 @@ def collect_lines(client_socket, line_count_limit=1000):
 def handle_client(connection, client_number):
     global line_count,data
     while True:
+        response = connection.recv(1024).decode()
+        print(response)
+        connection.send((input()+'\n').encode())
         response = receive_full_line(connection)
         result = parse_line(response)
         if result[0] == -2:
@@ -133,7 +136,6 @@ def handle_client(connection, client_number):
         line_count += 1
         print(f"Data from {client_number} Client")
         print(f"lines received: {line_count}\n no.:{result[0]}")
-
         if line_count == 1000:
             break
     print("all lines received\n\n")
@@ -146,7 +148,7 @@ def connect_client_as_server():
     global serverSocket,client_number
     serverSocket = socket(AF_INET,SOCK_STREAM)
     serverSocket.bind(('0.0.0.0',8828))
-    serverSocket.listen(3)
+    serverSocket.listen(5)
     print('Server is ready to receive')
 
     while True:
@@ -187,26 +189,26 @@ def connect_client_as_client(server_ip,server_port):
 
 line_count = 0
 data = [None] * 1000
-server_ip = '10.17.7.218'
+server_ip = '10.17.7.134'
 server_port = 9801
 thread = threading.Thread(target=connect_client_as_server, args=())
 thread.start()
 socketp = 0
 
-socketp = connect_to_server(server_ip, server_port)
-t2 = threading.Thread(target =connect_client_as_client,args =('10.194.12.217',8828))
-t2.start()
-print("Connected to the server.\n")
+# socketp = connect_to_server(server_ip, server_port)
+# t2 = threading.Thread(target =connect_client_as_client,args =('10.184.54.81',8828))
+# t2.start()
+# print("Connected to the server.\n")
 
-r = send_request(socketp, "SESSION RESET\n")
-print(r)
+# r = send_request(socketp, "SESSION RESET\n")
+# print(r)
 
-if r == "Ok\n":
-    full_text = collect_lines(socketp, 1000)
-    submission = assemble_lines(full_text, "2021CS50609", "blank", 1000)
-    with open("sub.txt", "w") as f:
-        f.write(submission)
-    submission_response = send_request(socketp, submission)
-    print(submission_response)
-socketp.close()
-print("Connection closed.")
+# if r == "Ok\n":
+#     full_text = collect_lines(socketp, 1000)
+#     submission = assemble_lines(full_text, "2021CS50609", "blank", 1000)
+#     with open("sub.txt", "w") as f:
+#         f.write(submission)
+#     submission_response = send_request(socketp, submission)
+#     print(submission_response)
+# socketp.close()
+# print("Connection closed.")
