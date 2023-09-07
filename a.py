@@ -77,10 +77,12 @@ def connect_to_server(server_ip, server_port):
 
 
 broken_lines = []
+
+
 def broadcast(result):
     global connection_list
     print(connection_list)
-    message = str(result[0])+'\n'+result[1]
+    message = str(result[0]) + "\n" + result[1]
     for connection in connection_list:
         print(f"Broadcasting line {result[0]}")
         connection.send(message.encode())
@@ -90,7 +92,7 @@ def broadcast(result):
 def collect_lines(client_socket, line_count_limit=1000):
     """Requests the server in a loop until all lines are collected"""
 
-    global line_count,data
+    global line_count, data
 
     # try:
     # wait_tries = 0
@@ -119,12 +121,13 @@ def collect_lines(client_socket, line_count_limit=1000):
 
     # finally:
 
+
 def handle_client(connection, client_number):
-    global line_count,data
+    global line_count, data
     while True:
         response = connection.recv(1024).decode()
         print(response)
-        connection.send((input()+'\n').encode())
+        connection.send((input() + "\n").encode())
         response = receive_full_line(connection)
         result = parse_line(response)
         if result[0] == -2:
@@ -144,27 +147,34 @@ def handle_client(connection, client_number):
 
 client_number = 1
 serverSocket = 0
+
+
 def connect_client_as_server():
-    global serverSocket,client_number
-    serverSocket = socket(AF_INET,SOCK_STREAM)
-    serverSocket.bind(('0.0.0.0',8828))
+    global serverSocket, client_number
+    serverSocket = socket(AF_INET, SOCK_STREAM)
+    serverSocket.bind(("0.0.0.0", 8828))
     serverSocket.listen(5)
-    print('Server is ready to receive')
+    print("Server is ready to receive")
 
     while True:
         connection, addr = serverSocket.accept()
         print(connection)
         print(addr)
-        client_thread = threading.Thread(target=handle_client, args=(connection, client_number))
+        client_thread = threading.Thread(
+            target=handle_client, args=(connection, client_number)
+        )
         client_thread.start()
         client_number += 1
         connection_list.append(connection)
 
+
 s = 0
-def connect_client_as_client(server_ip,server_port):
-    global s 
-    s = socket(AF_INET,SOCK_STREAM)
-    s.connect((server_ip,server_port)) # my IP address
+
+
+def connect_client_as_client(server_ip, server_port):
+    global s
+    s = socket(AF_INET, SOCK_STREAM)
+    s.connect((server_ip, server_port))  # my IP address
     while True:
         response = receive_full_line(s)
         result = parse_line(response)
@@ -186,10 +196,9 @@ def connect_client_as_client(server_ip,server_port):
     return data
 
 
-
 line_count = 0
 data = [None] * 1000
-server_ip = '10.17.7.134'
+server_ip = "10.17.7.134"
 server_port = 9801
 thread = threading.Thread(target=connect_client_as_server, args=())
 thread.start()

@@ -3,24 +3,25 @@ import sys
 import threading
 import time
 import concurrent.futures
+from dotenv import load_dotenv, find_dotenv
+import os
 
 
 # Global Variables
 
 # Default server
-server_ip = '10.17.7.134'
+server_ip = "10.17.7.134"
 server_port = 9801
 
-client_number = 1 # Increments when other clients join
+client_number = 1  # Increments when other clients join
 serverSocket = 0
-connection_list = [] # list of all connections made
+connection_list = []  # list of all connections made
 
-data = [None]*1000
+data = [None] * 1000
 line_count = 0
 
-stop_event = threading.Event() # To Terminate All Threads and close the code
+stop_event = threading.Event()  # To Terminate All Threads and close the code
 skt = 0
-
 
 
 def parse_line(line_str):
@@ -47,6 +48,7 @@ def validate_line(line):
 
 def assemble_lines(data, entry, name, line_no=1000):
     """Assembles the data in the format for submission to server"""
+    entry = os.environ.get("ENTRY_NO")
     submission = f"SUBMIT\n{entry}@{name}\n{line_no}\n"
     for i in range(len(data)):
         if data[i] != None:
@@ -101,22 +103,24 @@ broken_lines = []
 
 broadcast_lock = threading.Lock()
 
+
 def broadcast(result):
     global connection_list
     # print(connection_list)
     with broadcast_lock:
-        message = str(result[0])+'\n'+result[1]
+        message = str(result[0]) + "\n" + result[1]
         for connection in connection_list:
             connection.send(message.encode())
         # time.sleep(1)
     # with concurrent.futures.ThreadPoolExecutor() as executor:
     #     executor.map(lambda conn: conn.send(message.encode()), connection_list)
 
+
 def collect_lines(client_socket, line_count_limit=1000):
     """Requests the server in a loop until all lines are collected"""
     # try:
     # wait_tries = 0
-    global line_count,data
+    global line_count, data
     while True:
         # result = validate_line(send_request(client_socket, "SENDLINE\n"))
         response = request_line(client_socket)
@@ -130,7 +134,7 @@ def collect_lines(client_socket, line_count_limit=1000):
             broken_lines.append(result)
         if result[0] == -2 or result[0] == -1 or data[result[0]]:
             continue
-        
+
         data[result[0]] = result[1]
         line_count += 1
         # broadcast(result)
@@ -150,7 +154,8 @@ def collect_lines(client_socket, line_count_limit=1000):
 # socket.close()
 # print("Connection closed.")
 
-def connect_server(server_ip = server_ip,server_port=server_port):
+
+def connect_server(server_ip=server_ip, server_port=server_port):
     strt = time.time()
     global skt
     skt = connect_to_server(server_ip, server_port)
@@ -172,21 +177,22 @@ def connect_server(server_ip = server_ip,server_port=server_port):
     print("Broadcasting all lines")
     for i in range(line_count):
         print(f"broadcasting line {i}: {data[i]}")
-        broadcast([i,data[i]])
+        broadcast([i, data[i]])
         time.sleep(0.001)
     print(connection_list)
 
+
 def handle_client(connection, client_number):
-    global line_count,data
+    global line_count, data
     strt = 0
     flag = 0
     while True:
         response = receive_full_line(connection)
-        if (flag == 0):
+        if flag == 0:
             strt = time.time()
             flag = 1
         result = parse_line(response)
-        if (result == None):
+        if result == None:
             break
         if result[0] == -2:
             broken_lines.append(result)
@@ -212,18 +218,18 @@ def handle_client(connection, client_number):
     print("Broadcasting all lines")
     for i in range(line_count):
         print(f"broadcasting line {i}: {data[i]}")
-        broadcast([i,data[i]])
+        broadcast([i, data[i]])
         time.sleep(0.001)
     print(connection_list)
 
 
 def connect_client_server(cs_ip, cs_port):
-    global s 
-    s = socket(AF_INET,SOCK_STREAM)
+    global s
+    s = socket(AF_INET, SOCK_STREAM)
     print("HI")
     print(cs_ip)
     print(cs_port)
-    s.connect((cs_ip,int(cs_port))) # my IP address
+    s.connect((cs_ip, int(cs_port)))  # my IP address
     print("HI")
     # connection_list.append(s)
     print("HI")
@@ -257,14 +263,12 @@ def connect_client_server(cs_ip, cs_port):
     return data
 
 
-
-
 def act_server():
-    global serverSocket,client_number
-    serverSocket = socket(AF_INET,SOCK_STREAM)
-    serverSocket.bind(('0.0.0.0',8828))
+    global serverSocket, client_number
+    serverSocket = socket(AF_INET, SOCK_STREAM)
+    serverSocket.bind(("0.0.0.0", 8828))
     serverSocket.listen(5)
-    print('Server is ready to receive')
+    print("Server is ready to receive")
 
     while True:
         if stop_event.is_set():
@@ -276,20 +280,12 @@ def act_server():
         print(connection)
         connection_list.append(connection)
         print(connection_list)
-        client_thread = threading.Thread(target=handle_client, args=(connection, client_number))
+        client_thread = threading.Thread(
+            target=handle_client, args=(connection, client_number)
+        )
         client_thread.start()
         # client_thread.join()
         client_number += 1
-    
-
-
-
-
-
-
-
-
-
 
 
 def main():
@@ -298,37 +294,45 @@ def main():
     while True:
         s = input("Input : ")
         print("Parsing the inputs")
-        l = s.split(' ')
-        if (l[0].lower() == 'connect_server'):
-            print("This command will connect vayu and start taking the inputs from vayu")
-            if (len(l)<2):
-                print(f"Connecting to default Server : {server_ip} at port {server_port}")
-                t = threading.Thread(target = connect_server, args =(server_ip,server_port))
+        l = s.split(" ")
+        if l[0].lower() == "connect_server":
+            print(
+                "This command will connect vayu and start taking the inputs from vayu"
+            )
+            if len(l) < 2:
+                print(
+                    f"Connecting to default Server : {server_ip} at port {server_port}"
+                )
+                t = threading.Thread(
+                    target=connect_server, args=(server_ip, server_port)
+                )
                 t.start()
                 threads.append(t)
                 # connect_server(server_ip,server_port)
             else:
                 print(f"Connecting to server : {l[1]} at port {l[2]}")
-                t = threading.Thread(target = connect_server, args =(l[1],l[2]))
+                t = threading.Thread(target=connect_server, args=(l[1], l[2]))
                 t.start()
                 threads.append(t)
                 # connect_server(l[1],l[2])
-                
-        elif (l[0].lower() == 'act_server'):
+
+        elif l[0].lower() == "act_server":
             print(f"Starting the server for all")
-            t = threading.Thread(target = act_server, args =())
-            t.start() 
-        elif (l[0].lower() == 'connect_client_server'):
-            if (len(l)< 3):
-                print("Usage: connect_client_server client_server_ip client_server_port")
+            t = threading.Thread(target=act_server, args=())
+            t.start()
+        elif l[0].lower() == "connect_client_server":
+            if len(l) < 3:
+                print(
+                    "Usage: connect_client_server client_server_ip client_server_port"
+                )
             print(f"Connecting to client : {l[1]} to port {l[2]}")
-            t = threading.Thread(target = connect_client_server, args =(l[1],l[2]))
+            t = threading.Thread(target=connect_client_server, args=(l[1], l[2]))
             t.start()
             threads.append(t)
             # connect_client_server(l[1],l[2])
-        elif (s.lower() == 'exit'):
+        elif s.lower() == "exit":
             print("Exitting the Program")
-            stop_event.set() # Turn off all threads
+            stop_event.set()  # Turn off all threads
             for thread in threads:
                 thread.join()
             sys.exit(0)
@@ -336,7 +340,5 @@ def main():
             print("Could not parse the input")
 
 
-
-
-if __name__ =="__main__":
+if __name__ == "__main__":
     main()
