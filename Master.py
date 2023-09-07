@@ -19,8 +19,8 @@ data = [None]*1000
 line_count = 0
 
 stop_event = threading.Event() # To Terminate All Threads and close the code
-
 skt = 0
+
 
 
 def parse_line(line_str):
@@ -28,21 +28,9 @@ def parse_line(line_str):
     line_list = line_str.split("\n")
     try:
         s = int(line_list[0]), "\n".join(line_list[1:])
-        return(s)
+        return s
     except:
-        return
-
-def parse_line1(line_str):
-    """Converts the line string to (line number, line) pair"""
-    line_list = line_str.split("\n")
-    for x in line_list:
-        print(x)
-    try:
-        s = int(line_list[0]), "\n".join(line_list[1:])
-        return(s)
-    except:
-        return
-
+        pass
 
 
 def validate_line(line):
@@ -111,13 +99,18 @@ def connect_to_server(server_ip, server_port):
 broken_lines = []
 
 
+broadcast_lock = threading.Lock()
 
 def broadcast(result):
     global connection_list
     # print(connection_list)
-    message = str(result[0])+'\n'+result[1]
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.map(lambda conn: conn.send(message.encode()), connection_list)
+    with broadcast_lock:
+        message = str(result[0])+'\n'+result[1]
+        for connection in connection_list:
+            connection.send(message.encode())
+        # time.sleep(1)
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     executor.map(lambda conn: conn.send(message.encode()), connection_list)
 
 def collect_lines(client_socket, line_count_limit=1000):
     """Requests the server in a loop until all lines are collected"""
@@ -127,7 +120,7 @@ def collect_lines(client_socket, line_count_limit=1000):
     while True:
         # result = validate_line(send_request(client_socket, "SENDLINE\n"))
         response = request_line(client_socket)
-        time.sleep(0.01)
+        # time.sleep(0.01)
         result = parse_line(response)
 
         # Doing checks
@@ -140,7 +133,7 @@ def collect_lines(client_socket, line_count_limit=1000):
         
         data[result[0]] = result[1]
         line_count += 1
-        broadcast(result)
+        # broadcast(result)
         print(f"lines received: {line_count}\n no.:{result[0]}")
 
         if line_count == line_count_limit:
@@ -158,6 +151,7 @@ def collect_lines(client_socket, line_count_limit=1000):
 # print("Connection closed.")
 
 def connect_server(server_ip = server_ip,server_port=server_port):
+    strt = time.time()
     global skt
     skt = connect_to_server(server_ip, server_port)
     print("Connected to the server.\n")
@@ -173,12 +167,27 @@ def connect_server(server_ip = server_ip,server_port=server_port):
         submission_response = send_request(skt, submission)
         print(submission_response)
     print("Connection closed")
+    print("Every Thing is done")
+    print("Time Taken : ", time.time() - strt)
+    print("Broadcasting all lines")
+    for i in range(line_count):
+        print(f"broadcasting line {i}: {data[i]}")
+        broadcast([i,data[i]])
+        time.sleep(0.001)
+    print(connection_list)
 
 def handle_client(connection, client_number):
     global line_count,data
+    strt = 0
+    flag = 0
     while True:
         response = receive_full_line(connection)
+        if (flag == 0):
+            strt = time.time()
+            flag = 1
         result = parse_line(response)
+        if (result == None):
+            break
         if result[0] == -2:
             broken_lines.append(result)
         if result[0] == -2 or result[0] == -1 or data[result[0]]:
@@ -188,22 +197,35 @@ def handle_client(connection, client_number):
         line_count += 1
         print(f"Data from {client_number} Client")
         print(f"lines received: {line_count}\n no.:{result[0]}")
-        if line_count == 1000:
+        if line_count >= 1000:
             break
     print("all lines received\n\n")
-    return data
+    submission = assemble_lines(data, "2021CS50609", "blank", 1000)
+    with open("sub.txt", "w") as f:
+        f.write(submission)
+    submission_response = send_request(skt, submission)
+    print(submission_response)
+    print("Hello You are here")
+    print("Connection closed")
+    print("Every Thing is done")
+    print("Time Taken : ", time.time() - strt)
+    print("Broadcasting all lines")
+    for i in range(line_count):
+        print(f"broadcasting line {i}: {data[i]}")
+        broadcast([i,data[i]])
+        time.sleep(0.001)
+    print(connection_list)
 
 
 def connect_client_server(cs_ip, cs_port):
-    global s
-    global line_count
-    global data
-    global skt
+    global s 
     s = socket(AF_INET,SOCK_STREAM)
     print("HI")
+    print(cs_ip)
+    print(cs_port)
     s.connect((cs_ip,int(cs_port))) # my IP address
     print("HI")
-    connection_list.append(s)
+    # connection_list.append(s)
     print("HI")
     print(connection_list)
     while True:
@@ -211,28 +233,18 @@ def connect_client_server(cs_ip, cs_port):
             break
         response = receive_full_line(s)
         print("Hi")
-        line_list = response.split("\n")
-        for i in range(0,len(line_list)-1,2):
-            try:
-                if data[int(line_list[i])]:
-                    continue
-                data[int(line_list[i])] = line_list[i+1]+'\n'
-                line_count+=1
-                # print(f"lines received: {line_count}\n no.:{line_list[i]}\n line:{line_list[i+1]}")
-            except:
-                print(f"goes in except")
-                pass
-        # result = parse_line1(response)
-        # print(result)
+        result = parse_line(response)
+        print(result)
         # Doing checks
-        # if result[0] == -2:
-        #     broken_lines.append(result)
-        # if result[0] == -2 or result[0] == -1 or data[result[0]]:
-        #     continue
+        if result[0] == -2:
+            broken_lines.append(result)
+        if result[0] == -2 or result[0] == -1 or data[result[0]]:
+            continue
 
-        # data[result[0]] = result[1]
+        data[result[0]] = result[1]
         # broadcast(result)
-        # line_count += 1
+        line_count += 1
+        print(f"lines received: {line_count}\n no.:{result[0]}")
 
         if line_count == 1000:
             break
@@ -240,14 +252,8 @@ def connect_client_server(cs_ip, cs_port):
     # print("Broadcasting all lines")
     # for i in range(line_count):
     #     broadcast([i,data[i]])
+    #     time.sleep(1)
     # print(connection_list)
-    submission = assemble_lines(data, "2021CS50607", "blank", 1000)
-    with open("sub.txt", "w") as f:
-        f.write(submission)
-    submission_response = send_request(skt, submission)
-    print(submission_response)
-    list = submission_response.split(",")
-    print(f"Time taken: {list[-1]-list[-2]}")
     return data
 
 
@@ -262,53 +268,25 @@ def act_server():
 
     while True:
         if stop_event.is_set():
+            for connection in connection_list:
+                connection.close()
             break
         connection, addr = serverSocket.accept()
         print(f"Succesful Connection with a client with addr = {addr}")
         print(connection)
+        connection_list.append(connection)
+        print(connection_list)
         client_thread = threading.Thread(target=handle_client, args=(connection, client_number))
         client_thread.start()
-        client_thread.join()
+        # client_thread.join()
         client_number += 1
-        # connection_list.append(connection)
+    
 
 
 
 
 
 
-
-
-def parse_input(s):
-    print("Parsing the inputs")
-    l = s.split(' ')
-    if (l[0].lower() == 'connect_server'):
-        print("This command will connect vayu and start taking the inputs from vayu")
-        strt = time.time()
-        if (len(l)<2):
-            print(f"Connecting to default Server : {server_ip} at port {server_port}")
-            connect_server(server_ip,server_port)
-        else:
-            print(f"Connecting to server : {l[1]} at port {l[2]}")
-            connect_server(l[1],l[2])
-        print("Every Thing is done")
-        print("Time Taken : ", time.time() - strt)
-        print("Broadcasting all lines")
-        for i in range(line_count):
-            # print(f"broadcasting line {i}")
-            broadcast([i,data[i]])
-        print(connection_list)
-            
-    elif (l[0].lower() == 'act_server'):
-        print(f"Starting the server for all")
-        act_server()
-    elif (l[0].lower() == 'connect_client_server'):
-        if (len(l)< 3):
-            print("Usage: connect_client_server client_server_ip client_server_port")
-        print(f"Connecting to client : {l[1]} to port {l[2]}")
-        connect_client_server(l[1],l[2])
-    else:
-        print("Could not parse the input")
 
 
 
@@ -319,15 +297,43 @@ def main():
     threads = []
     while True:
         s = input("Input : ")
-        if (s.lower() == 'exit'):
+        print("Parsing the inputs")
+        l = s.split(' ')
+        if (l[0].lower() == 'connect_server'):
+            print("This command will connect vayu and start taking the inputs from vayu")
+            if (len(l)<2):
+                print(f"Connecting to default Server : {server_ip} at port {server_port}")
+                t = threading.Thread(target = connect_server, args =(server_ip,server_port))
+                t.start()
+                threads.append(t)
+                # connect_server(server_ip,server_port)
+            else:
+                print(f"Connecting to server : {l[1]} at port {l[2]}")
+                t = threading.Thread(target = connect_server, args =(l[1],l[2]))
+                t.start()
+                threads.append(t)
+                # connect_server(l[1],l[2])
+                
+        elif (l[0].lower() == 'act_server'):
+            print(f"Starting the server for all")
+            t = threading.Thread(target = act_server, args =())
+            t.start() 
+        elif (l[0].lower() == 'connect_client_server'):
+            if (len(l)< 3):
+                print("Usage: connect_client_server client_server_ip client_server_port")
+            print(f"Connecting to client : {l[1]} to port {l[2]}")
+            t = threading.Thread(target = connect_client_server, args =(l[1],l[2]))
+            t.start()
+            threads.append(t)
+            # connect_client_server(l[1],l[2])
+        elif (s.lower() == 'exit'):
             print("Exitting the Program")
             stop_event.set() # Turn off all threads
             for thread in threads:
                 thread.join()
             sys.exit(0)
-        t = threading.Thread(target = parse_input, args =(s,))
-        t.start()
-        threads.append(t)
+        else:
+            print("Could not parse the input")
 
 
 
