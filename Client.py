@@ -20,7 +20,7 @@ line_count = 0
 
 stop_event = threading.Event() # To Terminate All Threads and close the code
 
-
+skt = 0
 
 
 def parse_line(line_str):
@@ -131,6 +131,8 @@ def collect_lines(client_socket, line_count_limit=1000):
         result = parse_line(response)
 
         # Doing checks
+        if result == None:
+            break
         if result[0] == -2:
             broken_lines.append(result)
         if result[0] == -2 or result[0] == -1 or data[result[0]]:
@@ -156,18 +158,19 @@ def collect_lines(client_socket, line_count_limit=1000):
 # print("Connection closed.")
 
 def connect_server(server_ip = server_ip,server_port=server_port):
-    socket = connect_to_server(server_ip, server_port)
+    global skt
+    skt = connect_to_server(server_ip, server_port)
     print("Connected to the server.\n")
 
-    r = send_request(socket, "SESSION RESET\n")
+    r = send_request(skt, "SESSION RESET\n")
     print(r)
 
     if r == "Ok\n":
-        full_text = collect_lines(socket, 1000)
+        full_text = collect_lines(skt, 1000)
         submission = assemble_lines(full_text, "2021CS50609", "blank", 1000)
         with open("sub.txt", "w") as f:
             f.write(submission)
-        submission_response = send_request(socket, submission)
+        submission_response = send_request(skt, submission)
         print(submission_response)
     print("Connection closed")
 
@@ -195,6 +198,7 @@ def connect_client_server(cs_ip, cs_port):
     global s
     global line_count
     global data
+    global skt
     s = socket(AF_INET,SOCK_STREAM)
     print("HI")
     s.connect((cs_ip,int(cs_port))) # my IP address
@@ -212,7 +216,7 @@ def connect_client_server(cs_ip, cs_port):
             try:
                 if data[int(line_list[i])]:
                     continue
-                data[int(line_list[i])] = line_list[i+1]
+                data[int(line_list[i])] = line_list[i+1]+'\n'
                 line_count+=1
                 print(f"lines received: {line_count}\n no.:{line_list[i]}\n line:{line_list[i+1]}")
             except:
@@ -232,11 +236,17 @@ def connect_client_server(cs_ip, cs_port):
 
         if line_count == 1000:
             break
-    print("all lines received\n\n")
-    print("Broadcasting all lines")
-    for i in range(line_count):
-        broadcast([i,data[i]])
-    print(connection_list)
+    # print("all lines received\n\n")
+    # print("Broadcasting all lines")
+    # for i in range(line_count):
+    #     broadcast([i,data[i]])
+    # print(connection_list)
+    submission = assemble_lines(data, "2021CS50607", "blank", 1000)
+    with open("sub.txt", "w") as f:
+        f.write(submission)
+    submission_response = send_request(skt, submission)
+    print(submission_response)
+    return data
     return data
 
 
