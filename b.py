@@ -1,6 +1,7 @@
 from socket import *
 import sys
 import threading
+import time
 
 # Global Variables
 
@@ -176,8 +177,11 @@ def broadcast(result):
 def connect_client_server(cs_ip, cs_port):
     global s 
     s = socket(AF_INET,SOCK_STREAM)
+    print("HI")
     s.connect((cs_ip,int(cs_port))) # my IP address
+    print("HI")
     connection_list.append(s)
+    print("HI")
     print(connection_list)
     while True:
         if stop_event.is_set():
@@ -200,6 +204,10 @@ def connect_client_server(cs_ip, cs_port):
         if line_count == 1000:
             break
     print("all lines received\n\n")
+    print("Broadcasting all lines")
+    for i in range(line_count):
+        print(connection_list)
+        broadcast([i,data[i]])
     return data
 
 
@@ -236,12 +244,20 @@ def parse_input(s):
     l = s.split(' ')
     if (l[0].lower() == 'connect_server'):
         print("This command will connect vayu and start taking the inputs from vayu")
+        strt = time.time()
         if (len(l)<2):
             print(f"Connecting to default Server : {server_ip} at port {server_port}")
             connect_server(server_ip,server_port)
         else:
             print(f"Connecting to server : {l[1]} at port {l[2]}")
             connect_server(l[1],l[2])
+        print("Every Thing is done")
+        print("Time Taken : ", time.time() - strt)
+        print("Broadcasting all lines")
+        for i in range(line_count):
+            print(f"broadcasting line {i}")
+            broadcast([i,data[i]])
+            
     elif (l[0].lower() == 'act_server'):
         print(f"Starting the server for all")
         act_server()
@@ -266,7 +282,7 @@ def main():
             print("Exitting the Program")
             stop_event.set() # Turn off all threads
             for thread in threads:
-                    thread.join()
+                thread.join()
             sys.exit(0)
         t = threading.Thread(target = parse_input, args =(s,))
         t.start()
