@@ -6,8 +6,8 @@ server = 'vayu.iitd.ac.in'
 port = 9801
 message = 'SENDLINE\n'
 
-# c = socket(AF_INET,SOCK_STREAM)
-# c.connect((server,port))
+c = socket(AF_INET,SOCK_STREAM)
+c.connect((server,port))
 s = socket(AF_INET,SOCK_STREAM)
 s.connect(('10.184.54.81',8828)) # my IP address
 

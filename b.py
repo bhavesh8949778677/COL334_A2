@@ -2,6 +2,8 @@ from socket import *
 import sys
 import threading
 import time
+import concurrent.futures
+
 
 # Global Variables
 
@@ -93,6 +95,14 @@ def connect_to_server(server_ip, server_port):
 broken_lines = []
 
 
+
+def broadcast(result):
+    global connection_list
+    print(connection_list)
+    message = str(result[0])+'\n'+result[1]
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        executor.map(lambda conn: conn.send(message.encode()), connection_list)
+
 def collect_lines(client_socket, line_count_limit=1000):
     """Requests the server in a loop until all lines are collected"""
     # try:
@@ -101,6 +111,7 @@ def collect_lines(client_socket, line_count_limit=1000):
     while True:
         # result = validate_line(send_request(client_socket, "SENDLINE\n"))
         response = request_line(client_socket)
+        time.sleep(0.01)
         result = parse_line(response)
 
         # Doing checks
@@ -164,16 +175,6 @@ def handle_client(connection, client_number):
     return data
 
 
-def broadcast(result):
-    global connection_list
-    # print(connection_list)
-    message = str(result[0])+'\n'+result[1]
-    for connection in connection_list:
-        print(f"Broadcasting line {result[0]}")
-        connection.send(message.encode())
-    return
-
-
 def connect_client_server(cs_ip, cs_port):
     global s 
     s = socket(AF_INET,SOCK_STREAM)
@@ -206,8 +207,8 @@ def connect_client_server(cs_ip, cs_port):
     print("all lines received\n\n")
     print("Broadcasting all lines")
     for i in range(line_count):
-        print(connection_list)
         broadcast([i,data[i]])
+    print(connection_list)
     return data
 
 
@@ -255,8 +256,9 @@ def parse_input(s):
         print("Time Taken : ", time.time() - strt)
         print("Broadcasting all lines")
         for i in range(line_count):
-            print(f"broadcasting line {i}")
+            # print(f"broadcasting line {i}")
             broadcast([i,data[i]])
+        print(connection_list)
             
     elif (l[0].lower() == 'act_server'):
         print(f"Starting the server for all")
