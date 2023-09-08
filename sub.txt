@@ -1,5 +1,5 @@
 SUBMIT
-2021CS50607@blank
+2021CS50609@blank
 1000
 0
 The Project Gutenberg EBook of The Adventures of Sherlock Holmes
@@ -443,6 +443,8 @@ Sherlock Holmes and I surveyed this curt announcement and the rueful face behind
 "I started off, Mr. Holmes, but when I got to that address it was a manufactory of artificial knee-caps, and no one in it had ever heard of either Mr. William Morris or Mr. Duncan Ross."
 220
 "And what did you do then?" asked Holmes.
+107
+"But what is it you wish?"
 221
 "I went home to Saxe-Coburg Square, and I took the advice of my assistant. But he could not help me in any way. He could only say that if I waited I should hear by post. But that was not quite good enough, Mr. Holmes. I did not wish to lose such a place without a struggle, so, as I had heard that you were good enough to give advice to poor folk who were in need of it, I came right away to you."
 222
@@ -1183,6 +1185,8 @@ He flicked the horse with his whip, and we dashed away through the endless succe
 "You forget that I know nothing about it."
 590
 "I shall just have time to tell you the facts of the case before we get to Lee. It seems absurdly simple, and yet, somehow I can get nothing to go upon. There's plenty of thread, no doubt, but I can't get the end of it into my hand. Now, I'll state the case clearly and concisely to you, Watson, and maybe you can see a spark where all is dark to me."
+277
+"And have you any on hand just now?" I asked with interest.
 591
 "Last Monday Mr. Neville St. Clair went into town rather earlier than usual, remarking before he started that he had two important commissions to perform, and that he would bring his little boy home a box of bricks. Now, by the merest chance, his wife received a telegram upon this same Monday, very shortly after his departure, to the effect that a small parcel of considerable value which she had been expecting was waiting for her at the offices of the Aberdeen Shipping Company. Now, if you are well up in your London, you will know that the office of the company is in Fresno Street, which branches out of Upper Swandam Lane, where you found me to-night. Mrs. St. Clair had her lunch, started for the City, did some shopping, proceeded to the company's office, got her packet, and found herself at exactly 4:35 walking through Swandam Lane on her way back to the station. Have you followed me so far?"
 592

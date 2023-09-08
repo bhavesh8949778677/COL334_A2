@@ -4,7 +4,7 @@ import threading
 import time
 import matplotlib.pyplot as plt
 import concurrent.futures
-from dotenv import load_dotenv, find_dotenv
+# from dotenv import load_dotenv, find_dotenv
 import os
 
 # Global Variables
@@ -66,7 +66,8 @@ def validate_line(line):
 
 def assemble_lines(data, entry, name, line_no=1000):
     """Assembles the data in the format for submission to server"""
-    entry = os.environ.get("ENTRY_NO")
+    # entry = os.environ.get("ENTRY_NO")
+    entry = '2021CS50594'
     submission = f"SUBMIT\n{entry}@{name}\n{line_no}\n"
     for i in range(len(data)):
         if data[i] != None:
