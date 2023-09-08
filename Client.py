@@ -211,35 +211,39 @@ def connect_client_server(cs_ip, cs_port):
     print("HI")
     print(connection_list)
     while True:
-        if stop_event.is_set():
-            break
-        response = receive_full_line(s)
-        print("Hi")
-        line_list = response.split("\n")
-        for i in range(0, len(line_list) - 1, 2):
-            try:
-                if data[int(line_list[i])]:
-                    continue
-                data[int(line_list[i])] = line_list[i + 1] + "\n"
-                line_count += 1
-                # print(f"lines received: {line_count}\n no.:{line_list[i]}\n line:{line_list[i+1]}")
-            except:
-                print(f"goes in except")
-                pass
-        # result = parse_line1(response)
-        # print(result)
-        # Doing checks
-        # if result[0] == -2:
-        #     broken_lines.append(result)
-        # if result[0] == -2 or result[0] == -1 or data[result[0]]:
-        #     continue
+        try:
+            if stop_event.is_set():
+                break
+            response = receive_full_line(s)
+            print("Hi")
+            line_list = response.split("\n")
+            for i in range(0, len(line_list) - 1, 2):
+                try:
+                    if data[int(line_list[i])]:
+                        continue
+                    data[int(line_list[i])] = line_list[i + 1] + "\n"
+                    line_count += 1
+                    # print(f"lines received: {line_count}\n no.:{line_list[i]}\n line:{line_list[i+1]}")
+                except:
+                    print(f"goes in except")
+                    pass
+            # result = parse_line1(response)
+            # print(result)
+            # Doing checks
+            # if result[0] == -2:
+            #     broken_lines.append(result)
+            # if result[0] == -2 or result[0] == -1 or data[result[0]]:
+            #     continue
 
-        # data[result[0]] = result[1]
-        # broadcast(result)
-        # line_count += 1
+            # data[result[0]] = result[1]
+            # broadcast(result)
+            # line_count += 1
 
-        if line_count == 1000:
-            break
+            if line_count == 1000:
+                break
+        except:
+            s.close()
+            connect_client_server(cs_ip, cs_port)
     # print("all lines received\n\n")
     # print("Broadcasting all lines")
     # for i in range(line_count):
@@ -251,7 +255,7 @@ def connect_client_server(cs_ip, cs_port):
     submission_response = send_request(skt, submission)
     print(submission_response)
     list = submission_response.split(",")
-    print(f"Time taken: {list[-1]-list[-2]}")
+    print(f"Time taken: {int(list[-1])-int(list[-2])}")
     return data
 
 
