@@ -58,9 +58,10 @@ def validate_line(line):
     return -2, line
 
 
-def assemble_lines(data, entry, name, line_no=1000):
+def assemble_lines(data, entry, name="NetPulse", line_no=1000):
     """Assembles the data in the format for submission to server"""
-    # entry = os.environ.get("ENTRY_NO")
+    load_dotenv(find_dotenv())
+    entry = os.environ.get("ENTRY_NO")
     submission = f"SUBMIT\n{entry}@{name}\n{line_no}\n"
     for i in range(len(data)):
         if data[i] != None:
@@ -170,7 +171,7 @@ def connect_server(server_ip=server_ip, server_port=server_port):
 
     if r == "Ok\n":
         full_text = collect_lines(skt, 1000)
-        submission = assemble_lines(full_text, "2021CS50609", "blank", 1000)
+        submission = assemble_lines(full_text, "2021CS50609", "NetPulse", 1000)
         with open("sub.txt", "w") as f:
             f.write(submission)
         submission_response = send_request(skt, submission)
