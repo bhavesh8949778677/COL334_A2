@@ -2,7 +2,7 @@ from socket import *
 import sys
 import threading
 import time
-from dotenv import load_dotenv, find_dotenv
+# from dotenv import load_dotenv, find_dotenv
 import os
 
 
@@ -22,6 +22,10 @@ line_count = 0
 stop_event = threading.Event()  # To Terminate All Threads and close the code
 skt = 0
 submitted = 0
+
+
+l1 = threading.Lock()
+l2 = threading.Lock()
 
 def parse_line(line_str):
     """Converts the line string to (line number, line) pair"""
@@ -154,23 +158,22 @@ def connect_server(server_ip=server_ip, server_port=server_port):
 
     if r == "Ok\n":
         full_text = collect_lines(skt, 1000)
-        if (submitted == 0):
-            submission = assemble_lines(full_text, "2021CS50609", "blank", 1000)
-            with open("sub.txt", "w") as f:
-                f.write(submission)
-            submission_response = send_request(skt, submission)
-            print(submission_response)
+        with l1:
+            if (submitted == 0):
+                submitted = 1
+                submission = assemble_lines(full_text, "2021CS50609", "blank", 1000)
+                with open("sub.txt", "w") as f:
+                    f.write(submission)
+                submission_response = send_request(skt, submission)
+                print(submission_response)
+                print("Every Thing is done")
+                print("Time Taken : ", time.time() - strt)
+                print("Broadcasting all lines")
+                for i in range(line_count):
+                    broadcast([i, data[i]])
+                    time.sleep(0.001)
+                print("all lines broadcasted")
     skt.close()
-    print("Connection closed")
-    if (submitted == 0):
-        submitted = 1
-        print("Every Thing is done")
-        print("Time Taken : ", time.time() - strt)
-        print("Broadcasting all lines")
-        for i in range(line_count):
-            broadcast([i, data[i]])
-            time.sleep(0.001)
-        print("all lines broadcasted")
     return
 
 
@@ -199,21 +202,22 @@ def handle_client(connection, client_number):
             break
     print("all lines received\n\n")
     print("Last Line is received from some client")
-    if (submitted == 0):
-        submission = assemble_lines(data, "2021CS50594", "blank", 1000)
-        with open("sub.txt", "w") as f:
-            f.write(submission)
-        submission_response = send_request(skt, submission)
-        print(submission_response)
-        print("Connection closed")
-        submitted = 1
-        print("Every Thing is done")
-        print("Time Taken : ", time.time() - strt)
-        print("Broadcasting all lines")
-        for i in range(line_count):
-            broadcast([i, data[i]])
-            time.sleep(0.001)
-        print("all lines broadcasted")
+    with l2:
+        if (submitted == 0):
+            submission = assemble_lines(data, "2021CS50594", "blank", 1000)
+            with open("sub.txt", "w") as f:
+                f.write(submission)
+            submission_response = send_request(skt, submission)
+            print(submission_response)
+            print("Connection closed")
+            submitted = 1
+            print("Every Thing is done")
+            print("Time Taken : ", time.time() - strt)
+            print("Broadcasting all lines")
+            for i in range(line_count):
+                broadcast([i, data[i]])
+                time.sleep(0.001)
+            print("all lines broadcasted")
     return
 
 

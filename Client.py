@@ -60,7 +60,7 @@ def validate_line(line):
 
 def assemble_lines(data, entry, name, line_no=1000):
     """Assembles the data in the format for submission to server"""
-    entry = os.environ.get("ENTRY_NO")
+    # entry = os.environ.get("ENTRY_NO")
     submission = f"SUBMIT\n{entry}@{name}\n{line_no}\n"
     for i in range(len(data)):
         if data[i] != None:
@@ -204,18 +204,14 @@ def connect_client_server(cs_ip, cs_port):
     global data
     global skt
     s = socket(AF_INET, SOCK_STREAM)
-    print("HI")
     s.connect((cs_ip, int(cs_port)))  # my IP address
-    print("HI")
     connection_list.append(s)
-    print("HI")
     print(connection_list)
     while True:
+        if stop_event.is_set():
+            break
         try:
-            if stop_event.is_set():
-                break
             response = receive_full_line(s)
-            print("Hi")
             line_list = response.split("\n")
             for i in range(0, len(line_list) - 1, 2):
                 try:
@@ -223,33 +219,33 @@ def connect_client_server(cs_ip, cs_port):
                         continue
                     data[int(line_list[i])] = line_list[i + 1] + "\n"
                     line_count += 1
-                    # print(f"lines received: {line_count}\n no.:{line_list[i]}\n line:{line_list[i+1]}")
+                    print(f"Receiving Lines from mater\nlines received: {line_count}\n no.:{line_list[i]}\n")
                 except:
                     print(f"goes in except")
                     pass
-            # result = parse_line1(response)
-            # print(result)
-            # Doing checks
-            # if result[0] == -2:
-            #     broken_lines.append(result)
-            # if result[0] == -2 or result[0] == -1 or data[result[0]]:
-            #     continue
-
-            # data[result[0]] = result[1]
-            # broadcast(result)
-            # line_count += 1
-
-            if line_count == 1000:
-                break
         except:
             s.close()
-            connect_client_server(cs_ip, cs_port)
+            connect_client_server(cs_ip,cs_port)
+        # result = parse_line1(response)
+        # print(result)
+        # Doing checks
+        # if result[0] == -2:
+        #     broken_lines.append(result)
+        # if result[0] == -2 or result[0] == -1 or data[result[0]]:
+        #     continue
+
+        # data[result[0]] = result[1]
+        # broadcast(result)
+        # line_count += 1
+
+        if line_count == 1000:
+            break
     # print("all lines received\n\n")
     # print("Broadcasting all lines")
     # for i in range(line_count):
     #     broadcast([i,data[i]])
     # print(connection_list)
-    submission = assemble_lines(data, "2021CS50607", "blank", 1000)
+    submission = assemble_lines(data, "2021CS50607", "Netpulse", 1000)
     with open("sub.txt", "w") as f:
         f.write(submission)
     submission_response = send_request(skt, submission)
@@ -295,10 +291,6 @@ def parse_input(s):
             connect_server(l[1], l[2])
         print("Every Thing is done")
         print("Time Taken : ", time.time() - strt)
-        print("Broadcasting all lines")
-        for i in range(line_count):
-            # print(f"broadcasting line {i}")
-            broadcast([i, data[i]])
         print(connection_list)
 
     elif l[0].lower() == "act_server":

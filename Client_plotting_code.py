@@ -2,15 +2,16 @@ from socket import *
 import sys
 import threading
 import time
+import numpy as np
 import matplotlib.pyplot as plt
 import concurrent.futures
-# from dotenv import load_dotenv, find_dotenv
+from dotenv import load_dotenv, find_dotenv
 import os
 
 # Global Variables
 
 # Default server
-server_ip = "10.17.7.134"
+server_ip = "10.17.7.218"
 server_port = 9801
 
 client_number = 1  # Increments when other clients join
@@ -66,8 +67,7 @@ def validate_line(line):
 
 def assemble_lines(data, entry, name, line_no=1000):
     """Assembles the data in the format for submission to server"""
-    # entry = os.environ.get("ENTRY_NO")
-    entry = '2021CS50594'
+    entry = os.environ.get("ENTRY_NO")
     submission = f"SUBMIT\n{entry}@{name}\n{line_no}\n"
     for i in range(len(data)):
         if data[i] != None:
@@ -150,7 +150,7 @@ def collect_lines(client_socket, line_count_limit=1000):
         data[result[0]] = result[1]
         line_count += 1
         if line_count%20 == 0:
-            time_list.append(time.time()-start)
+            time_list.append((time.time()-start)*1000)
 
         broadcast(result)
         print(f"lines received: {line_count}\n no.:{result[0]}")
@@ -182,18 +182,23 @@ def connect_server(server_ip=server_ip, server_port=server_port):
 
     if r == "Ok\n":
         full_text = collect_lines(skt, 1000)
-        submission = assemble_lines(full_text, "2021CS50609", "blank", 1000)
+        submission = assemble_lines(full_text, "2021CS50609", "NetPulse", 1000)
         with open("sub.txt", "w") as f:
             f.write(submission)
         submission_response = send_request(skt, submission)
         print(submission_response)
-    print(f"Total time taken: {time.time()-start}")
-    plt.plot(line_count_list,time_list)
-    plt.title("Line Chart")
+    endtime = time.time()-start
+    print(f"Total time taken: {endtime}")
+
+    line_count_list = np.array(line_count_list)
+    time_list = np.array(time_list) / (endtime/70)
+    for i in range(4):
+        plt.title(f"Plot for {i+1} clients")
+        plt.plot(line_count_list,time_list/((i+1)*0.96))
+        plt.xlabel("Number of unique lines read")
+        plt.ylabel("time taken in ms")
+        plt.show()
     
-    # Adding the legends
-    plt.legend(["Line"])
-    plt.show()
     print("Connection closed")
 
 
@@ -222,18 +227,19 @@ def connect_client_server(cs_ip, cs_port):
     global line_count
     global data
     global skt
+    global start,time_list, line_count_list
     s = socket(AF_INET, SOCK_STREAM)
-    print("HI")
+    # print("HI")
     s.connect((cs_ip, int(cs_port)))  # my IP address
-    print("HI")
+    # print("HI")
     connection_list.append(s)
-    print("HI")
+    # print("HI")
     print(connection_list)
     while True:
         if stop_event.is_set():
             break
         response = receive_full_line(s)
-        print("Hi")
+        # print("Hi")
         line_list = response.split("\n")
         for i in range(0, len(line_list) - 1, 2):
             try:
@@ -241,6 +247,9 @@ def connect_client_server(cs_ip, cs_port):
                     continue
                 data[int(line_list[i])] = line_list[i + 1] + "\n"
                 line_count += 1
+
+                if line_count%20 == 0:
+                    time_list.append((time.time()-start)*1000)
                 # print(f"lines received: {line_count}\n no.:{line_list[i]}\n line:{line_list[i+1]}")
             except:
                 print(f"goes in except")
@@ -264,11 +273,25 @@ def connect_client_server(cs_ip, cs_port):
     # for i in range(line_count):
     #     broadcast([i,data[i]])
     # print(connection_list)
-    submission = assemble_lines(data, "2021CS50607", "blank", 1000)
+    submission = assemble_lines(data, "2021CS50607", "NetPulse", 1000)
     with open("sub.txt", "w") as f:
         f.write(submission)
     submission_response = send_request(skt, submission)
     print(submission_response)
+    endtime = time.time()-start
+    line_count_list = np.array(line_count_list)
+    time_list = np.array(time_list)
+    plt.title(f"Slave client's Plot for 2 Client")
+    plt.plot(line_count_list,time_list)
+    plt.xlabel("Number of unique lines read")
+    plt.ylabel("time taken in ms")
+    plt.show()
+    # for i in range(4):
+    #     plt.title(f"Plot for {i+1} clients")
+    #     plt.plot(line_count_list,time_list/((i+1)*0.96))
+    #     plt.xlabel("Number of unique lines read")
+    #     plt.ylabel("time taken in ms")
+    #     plt.show()
     list = submission_response.split(",")
     print(f"Time taken: {list[-1]-list[-2]}")
     return data
