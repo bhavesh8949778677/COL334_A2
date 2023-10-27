@@ -162,8 +162,8 @@ def connect_server(server_ip=server_ip, server_port=server_port):
             if (submitted == 0):
                 submitted = 1
                 submission = assemble_lines(full_text, "2021CS50609", "blank", 1000)
-                with open("sub.txt", "w") as f:
-                    f.write(submission)
+                # with open("sub.txt", "w") as f:
+                #     f.write(submission)
                 submission_response = send_request(skt, submission)
                 print(submission_response)
                 print("Every Thing is done")
@@ -205,8 +205,8 @@ def handle_client(connection, client_number):
     with l2:
         if (submitted == 0):
             submission = assemble_lines(data, "2021CS50594", "blank", 1000)
-            with open("sub.txt", "w") as f:
-                f.write(submission)
+            # with open("sub.txt", "w") as f:
+            #     f.write(submission)
             submission_response = send_request(skt, submission)
             print(submission_response)
             print("Connection closed")
