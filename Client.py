@@ -9,8 +9,8 @@ import os
 # Global Variables
 
 # Default server
-server_ip = "10.17.7.134"
-server_port = 9801
+server_ip = "10.17.7.218"
+server_port = 9803
 
 client_number = 1  # Increments when other clients join
 serverSocket = 0
@@ -171,8 +171,8 @@ def connect_server(server_ip=server_ip, server_port=server_port):
     if r == "Ok\n":
         full_text = collect_lines(skt, 1000)
         submission = assemble_lines(full_text, "2021CS50609", "blank", 1000)
-        with open("sub.txt", "w") as f:
-            f.write(submission)
+        # with open("sub.txt", "w") as f:
+        #     f.write(submission)
         submission_response = send_request(skt, submission)
         print(submission_response)
     print("Connection closed")
@@ -219,7 +219,7 @@ def connect_client_server(cs_ip, cs_port):
                         continue
                     data[int(line_list[i])] = line_list[i + 1] + "\n"
                     line_count += 1
-                    print(f"Receiving Lines from mater\nlines received: {line_count}\n no.:{line_list[i]}\n")
+                    print(f"Receiving Lines from master\nlines received: {line_count}\n no.:{line_list[i]}\n")
                 except:
                     print(f"goes in except")
                     pass
@@ -246,8 +246,8 @@ def connect_client_server(cs_ip, cs_port):
     #     broadcast([i,data[i]])
     # print(connection_list)
     submission = assemble_lines(data, "2021CS50607", "Netpulse", 1000)
-    with open("sub.txt", "w") as f:
-        f.write(submission)
+    # with open("sub.txt", "w") as f:
+    #     f.write(submission)
     submission_response = send_request(skt, submission)
     print(submission_response)
     list = submission_response.split(",")
@@ -312,11 +312,12 @@ def main():
         s = input("Input : ")
         if s.lower() == "exit":
             print("Exitting the Program")
+            break
             stop_event.set()  # Turn off all threads
             for thread in threads:
                 thread.join()
             sys.exit(0)
-        t = threading.Thread(target=parse_input, args=(s,))
+        t = threading.Thread(target=parse_input, args=(s,),daemon=True)
         t.start()
         threads.append(t)
 

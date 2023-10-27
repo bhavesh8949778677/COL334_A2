@@ -263,26 +263,27 @@ def main():
                     f"Connecting to default Server : {server_ip} at port {server_port}"
                 )
                 t = threading.Thread(
-                    target=connect_server, args=(server_ip, server_port)
+                    target=connect_server, args=(server_ip, server_port), daemon = True
                 )
                 t.start()
                 threads.append(t)
             else:
                 print(f"Connecting to server : {l[1]} at port {l[2]}")
-                t = threading.Thread(target=connect_server, args=(l[1], l[2]))
+                t = threading.Thread(target=connect_server, args=(l[1], l[2]),daemon=True)
                 t.start()
                 threads.append(t)
 
         elif l[0].lower() == "act_server":
             print(f"Starting the server for all")
-            t = threading.Thread(target=act_server, args=())
+            t = threading.Thread(target=act_server, args=(),daemon=True)
             t.start()
         elif s.lower() == "exit":
             print("Exitting the Program")
-            stop_event.set()  # Turn off all threads
-            for thread in threads:
-                thread.join()
-            sys.exit(0)
+            # stop_event.set()  # Turn off all threads
+            # for thread in threads:
+            #     thread.join()
+            # sys.exit(0)
+            break
         else:
             print("Could not parse the input")
 
